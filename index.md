@@ -1,37 +1,62 @@
-## Welcome to GitHub Pages
+---
+title: "Barbell Lift"
+author: "E.Dadgar"
+date: '2022-06-15'
+output: html_document
+---
 
-You can use the [editor on GitHub](https://github.com/Ebddgr/barbell-lifts/edit/gh-pages/index.md) to maintain and preview the content for your website in Markdown files.
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+## Reading the Data
 
-Whenever you commit to this repository, GitHub Pages will run [Jekyll](https://jekyllrb.com/) to rebuild the pages in your site, from the content in your Markdown files.
-
-### Markdown
-
-Markdown is a lightweight and easy-to-use syntax for styling your writing. It includes conventions for
-
-```markdown
-Syntax highlighted code block
-
-# Header 1
-## Header 2
-### Header 3
-
-- Bulleted
-- List
-
-1. Numbered
-2. List
-
-**Bold** and _Italic_ and `Code` text
-
-[Link](url) and ![Image](src)
+```{r,cache=TRUE}
+traindata <- read.csv("/Documents and Settings/Hani/Documents/pml-training.csv",na.strings = "NA")
+testdata <- read.csv("/Documents and Settings/Hani/Documents/pml-testing.csv",na.strings = "NA")
 ```
 
-For more details see [Basic writing and formatting syntax](https://docs.github.com/en/github/writing-on-github/getting-started-with-writing-and-formatting-on-github/basic-writing-and-formatting-syntax).
+## Pre Processing
 
-### Jekyll Themes
+First 7 variables do not include informational data for the training model.
+Missing values have been replaced with zeros.
+Variables with more than 95% correlation are removed.
 
-Your Pages site will use the layout and styles from the Jekyll theme you have selected in your [repository settings](https://github.com/Ebddgr/barbell-lifts/settings/pages). The name of this theme is saved in the Jekyll `_config.yml` configuration file.
+### Cleaning Process
+```{r,echo=FALSE,warning=FALSE}
+library(caret)
+clean.data <- function(x){
+        resp <- x %>% select(160)
+        x <-x %>%  select(-c(1:7,160))
+        # change classes to numeric
+        x <- x %>% sapply(as.numeric)
+        #impute missing data with zero
+        x[is.na(x)]=0
+        #remove near zero variables
+        x <- x[,-nearZeroVar(x)]
+        #remove highly correlated data
+        highcorrelation <- findCorrelation(cor(x),cutoff = .95)
+        x <- x[,-highcorrelation]
+        #attaching the classe variable
+        x <- cbind(x,resp)
+        return(x)
+}
+train <- clean.data(traindata)
+```
 
-### Support or Contact
+To reduce the complexity of the data, PCA method has been used and the components than explains more than 95% of the variance have been selected.
 
-Having trouble with Pages? Check out our [documentation](https://docs.github.com/categories/github-pages-basics/) or [contact support](https://support.github.com/contact) and we’ll help you sort it out.
+## Feature Selection
+```{r,cache=TRUE}
+pca <- prcomp(train[,-ncol(train)],center = TRUE,scale=TRUE)
+components <- which(summary(pca)$importance[3,]>.95)[1]
+train.pca <- cbind(as.data.frame(pca$x[,1:components]),classe=as.factor(train$classe))
+test.pca <- predict(pca,testdata)[,1:components] %>% as.data.frame()
+```
+
+## Training and testing the model
+Using randomForest package the model has been trained. Predicted results are as follows:
+```{r,cache=TRUE}
+library(randomForest)
+model.fit <- randomForest(classe~.,data=train.pca)
+predict(model.fit,test.pca)
+```
