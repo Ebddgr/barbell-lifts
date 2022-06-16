@@ -20,6 +20,7 @@ testdata <- read.csv("/Documents and Settings/Hani/Documents/pml-testing.csv",na
 First 7 variables do not include informational data for the training model.
 Missing values have been replaced with zeros.
 Variables with more than 95% correlation are removed.
+
 ### Cleaning Process
 ```{r,echo=FALSE,warning=FALSE}
 library(caret)
@@ -43,6 +44,7 @@ train <- clean.data(traindata)
 ```
 
 To reduce the complexity of the data, PCA method has been used and the components than explains more than 95% of the variance have been selected.
+
 ## Feature Selection
 ```{r,cache=TRUE}
 pca <- prcomp(train[,-ncol(train)],center = TRUE,scale=TRUE)

@@ -379,7 +379,9 @@ testdata &lt;- read.csv(&quot;/Documents and Settings/Hani/Documents/pml-testing
 <h2>Pre Processing</h2>
 <p>First 7 variables do not include informational data for the training
 model. Missing values have been replaced with zeros. Variables with more
-than 95% correlation are removed. ### Cleaning Process</p>
+than 95% correlation are removed.</p>
+<div id="cleaning-process" class="section level3">
+<h3>Cleaning Process</h3>
 <pre><code>## Loading required package: lattice</code></pre>
 <pre><code>## 
 ## Attaching package: &#39;caret&#39;</code></pre>
@@ -388,7 +390,11 @@ than 95% correlation are removed. ### Cleaning Process</p>
 ##     lift</code></pre>
 <p>To reduce the complexity of the data, PCA method has been used and
 the components than explains more than 95% of the variance have been
-selected. ## Feature Selection</p>
+selected.</p>
+</div>
+</div>
+<div id="feature-selection" class="section level2">
+<h2>Feature Selection</h2>
 <pre class="r"><code>pca &lt;- prcomp(train[,-ncol(train)],center = TRUE,scale=TRUE)
 components &lt;- which(summary(pca)$importance[3,]&gt;.95)[1]
 train.pca &lt;- cbind(as.data.frame(pca$x[,1:components]),classe=as.factor(train$classe))
